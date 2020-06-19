@@ -1,5 +1,7 @@
+// dependancies
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+const cTable = require("console.table");
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -84,7 +86,7 @@ function viewAllNickname() {
   connection.query("SELECT nick_name FROM employee", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    console.log(res);
+    console.table([{}]);
     connection.end();
   });
 }
