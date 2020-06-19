@@ -27,13 +27,14 @@ function runTracker() {
       choices: [
         "View all Employees by Nickname",
         "View all Employees by Full Name",
-        "View all Employees by Department",
+        "View all Roles",
+        "View all Departments",
+        "Add Department",
         "Add Employee",
+        "Add Role",
         "Remove Employee",
         "Update Employee",
         "Update Employee Role",
-        "View all Roles",
-        "Add Role",
       ],
     })
     .then(function (answer) {
@@ -46,12 +47,24 @@ function runTracker() {
           viewAllFullName();
           break;
 
-        case "View all Employees by Department":
-          viewEmpDept();
+        case "View all Roles":
+          viewAllRoles();
+          break;
+
+        case "View all Departments":
+          viewAllDepts();
+          break;
+
+        case "Add Department":
+          addDepartment();
           break;
 
         case "Add Employee":
           addEmployee();
+          break;
+
+        case "Add Role":
+          addRole();
           break;
 
         case "Remove Employee":
@@ -65,18 +78,6 @@ function runTracker() {
         case "Update Employee Role":
           updateEmpRole();
           break;
-
-        case "Update Employee Manager":
-          updateEmpMngr();
-          break;
-
-        case "View all Roles":
-          viewAllRoles();
-          break;
-
-        case "Add Role":
-          addRole();
-          break;
       }
     });
 }
@@ -86,7 +87,11 @@ function viewAllNickname() {
   connection.query("SELECT nick_name FROM employee", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    console.table([{}]);
+    //     console.table([
+    //         {
+    //             full_name:
+    //     }
+    // ]);
     connection.end();
   });
 }
@@ -101,8 +106,18 @@ function viewAllFullName() {
   });
 }
 
-function viewEmpDept() {
-  console.log("Retrieving our people based on department...\n");
+function viewAllRoles() {
+  console.log("Retrieving all roles ...\n");
+  connection.query("SELECT title FROM employee_role", function (err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement
+    console.log(res);
+    connection.end();
+  });
+}
+
+function viewAllDepts() {
+  console.log("Retrieving all departments ...\n");
   connection.query("SELECT dept_name FROM employee_department", function (
     err,
     res
@@ -112,6 +127,24 @@ function viewEmpDept() {
     console.log(res);
     connection.end();
   });
+}
+
+function addDepartment() {
+  console.log("Adding department to network...\n");
+  var query = connection.query(
+    "INSERT INTO employee_department SET ?",
+    {
+      dept_name: "",
+    },
+    function (err, res) {
+      if (err) throw err;
+      console.log(res.affectedRows + " department added!\n");
+      // what do i call here?
+    }
+  );
+
+  // logs the actual query being run
+  console.log(query.sql);
 }
 
 function addEmployee() {
@@ -128,6 +161,27 @@ function addEmployee() {
       console.log(res.affectedRows + " employee added!\n");
       // Call updateemployee AFTER the INSERT completes
       updateEmployee();
+    }
+  );
+
+  // logs the actual query being run
+  console.log(query.sql);
+}
+
+function addRole() {
+  console.log("Adding new role to the list...\n");
+  var query = connection.query(
+    "INSERT INTO employee_role SET ?",
+    {
+      title: "",
+      salary: "",
+      employee_dept_id: "",
+    },
+    function (err, res) {
+      if (err) throw err;
+      console.log(res.affectedRows + " role added!\n");
+      // Call updateemployeerole AFTER the INSERT completes
+      updateEmpRole();
     }
   );
 
@@ -197,36 +251,6 @@ function updateEmpRole() {
       console.log(res.affectedRows + " employee_role updated!\n");
       //   // Call deleteProduct AFTER the UPDATE completes
       //   deleteProduct();
-    }
-  );
-
-  // logs the actual query being run
-  console.log(query.sql);
-}
-
-function viewAllRoles() {
-  connection.query("SELECT title FROM employee_role", function (err, res) {
-    if (err) throw err;
-    // Log all results of the SELECT statement
-    console.log(res);
-    connection.end();
-  });
-}
-
-function addRole() {
-  console.log("Adding new role to the list...\n");
-  var query = connection.query(
-    "INSERT INTO employee_role SET ?",
-    {
-      title: "",
-      salary: "",
-      employee_dept_id: "50",
-    },
-    function (err, res) {
-      if (err) throw err;
-      console.log(res.affectedRows + " product inserted!\n");
-      // Call updateemployeerole AFTER the INSERT completes
-      updateEmpRole();
     }
   );
 

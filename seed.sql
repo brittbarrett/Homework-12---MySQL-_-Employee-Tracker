@@ -10,7 +10,7 @@ VALUES ("Oval Office"),("Podcast"), ("C-Suite");
 
 INSERT INTO employee_role (title,salary,employee_department_id)
 VALUES ("Founder/Chief of Content",1000000,1),
-("Host of PMT", 500000,2)("Co-Host of PMT",370000,2), ("Host of CHD", 500000,2), ("CEO",60000,3 );
+("Host of PMT", 500000,2)("Co-Host of PMT",370000,2), ("Host of CHD", 500000,2), ("CEO",60000,3);
 
 
 
