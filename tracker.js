@@ -77,3 +77,5 @@ function runTracker() {
       }
     });
 }
+
+function viewAllEmployees() {}
