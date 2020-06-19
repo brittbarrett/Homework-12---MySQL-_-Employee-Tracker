@@ -30,3 +30,4 @@ CREATE TABLE employee (
 );
 
 
+-- SELECT * FROM [employee] JOIN employee_department ON [employee].id = employee_department.id

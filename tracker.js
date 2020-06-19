@@ -87,11 +87,8 @@ function viewAllNickname() {
   connection.query("SELECT nick_name FROM employee", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    //     console.table([
-    //         {
-    //             full_name:
-    //     }
-    // ]);
+    console.table(res);
+
     connection.end();
   });
 }
@@ -101,7 +98,7 @@ function viewAllFullName() {
   connection.query("SELECT full_name FROM employee", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    console.log(res);
+    console.table(res);
     connection.end();
   });
 }
@@ -111,7 +108,7 @@ function viewAllRoles() {
   connection.query("SELECT title FROM employee_role", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    console.log(res);
+    console.table(res);
     connection.end();
   });
 }
@@ -124,7 +121,7 @@ function viewAllDepts() {
   ) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    console.log(res);
+    console.table(res);
     connection.end();
   });
 }
