@@ -32,7 +32,7 @@ function runTracker() {
         "Add Employee",
         "Add Role",
         "Remove Employee",
-        "Update Employee",
+        "Update Employee Information",
         "Update Employee Role",
       ],
     })
@@ -66,8 +66,8 @@ function runTracker() {
           removeEmployee();
           break;
 
-        case "Update Employee":
-          updateEmployee();
+        case "Update Employee Information":
+          updateEmpInfo();
           break;
 
         case "Update Employee Role":
@@ -186,7 +186,7 @@ function addEmployee() {
           if (err) throw err;
           console.log(res.affectedRows + " employee added!\n");
           // // Call updateemployee AFTER the INSERT completes
-          // updateEmployee();
+          // updateEmpInfo();
         }
       );
 
@@ -261,7 +261,7 @@ function removeEmployee() {
     });
 }
 
-function updateEmployee() {
+function updateEmpInfo() {
   var query = connection.query("SELECT * FROM employee", function (
     err,
     results
@@ -334,8 +334,6 @@ function updateEmpRole() {
     function (err, res) {
       if (err) throw err;
       console.log(res.affectedRows + " employee_role updated!\n");
-      //   // Call deleteProduct AFTER the UPDATE completes
-      //   deleteProduct();
     }
   );
 
