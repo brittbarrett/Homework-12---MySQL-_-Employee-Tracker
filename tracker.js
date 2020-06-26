@@ -2,6 +2,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 const cTable = require("console.table");
+const express = require("express");
 
 // connection to database
 var connection = mysql.createConnection({
@@ -88,14 +89,10 @@ function runTracker() {
     });
 }
 
-// empty array to store the employee table by name
-// emplTablebyname = []
-
 // VIEW ALL EMPLOYEES
 function viewAllEmp() {
   console.log("Retrieving all employees...\n");
 
-  //make a connection to db to get all department name with innerjoin
   //then add on to res
   var query =
     "SELECT employee.id, full_name, nick_name, role_id, manager_id, title FROM employee LEFT JOIN employee_role ON employee.role_id = employee_role.id";
@@ -256,26 +253,32 @@ function addRole() {
 
 // REMOVE EMPLOYEE
 function removeEmployee() {
+  connection.query("SELECT * FROM employee", (err, empnames) => {
+    var employeesArray = empnames.map((name) => {
+      return `${name.id} ${name.full_name} ${name.nick_name}`;
+    });
+  });
   inquirer
     .prompt([
       {
         name: "removeEmp",
-        type: "rawlist",
+        type: "list",
         message:
           "Who would you like to cut from the Barstool team? Please give the full name.",
-        choices: [],
+        choices: employeesArray,
       },
     ])
     .then(function (answer) {
+      var removeID = answer.removeEmp.split(" ");
       console.log("Trimming the fat...\n");
       connection.query(
         "DELETE FROM employee WHERE ?",
         {
-          full_name: answer.removeEmp,
+          id: parseInt(removeID[0]),
         },
         function (err, res) {
           if (err) throw err;
-          console.log(res.affectedRows + " employee deleted!\n");
+          console.log(`${removeID[1]} ${removeID[2]} was removed from list.`);
           // Call view all employees AFTER the DELETE completes
           console.table(viewAllEmp());
           runTracker();
@@ -286,26 +289,32 @@ function removeEmployee() {
 
 // REMOVE DEPARTMENT
 function removeDept() {
+  connection.query("SELECT * FROM employee_department", (err, deptnames) => {
+    var departmentsArray = deptnames.map((deptname) => {
+      return `${deptname.id} ${deptname.dept_name}`;
+    });
+  });
   inquirer
     .prompt([
       {
         name: "removeDep",
-        type: "rawlist",
+        type: "list",
         message:
           "Which department would you like to remove from Barstool's list?",
-        choices: [],
+        choices: departmentsArray,
       },
     ])
     .then(function (answer) {
       console.log("Deleting department......\n");
+      var removeID = answer.removeDep.split(" ");
       connection.query(
         "DELETE FROM employee_department WHERE ?",
         {
-          dept_name: answer.removeDep,
+          id: parseInt(removeID[0]),
         },
         function (err, res) {
           if (err) throw err;
-          console.log(res.affectedRows + " department deleted!\n");
+          console.log(`${removeID[1]} was deleted from list.`);
           // Call viewalldepartments AFTER the DELETE completes
           console.table(viewAllDepts());
           runTracker();
@@ -316,25 +325,31 @@ function removeDept() {
 
 // REMOVE ROLE
 function removeRole() {
+  connection.query("SELECT * FROM employee_role", (err, rolenames) => {
+    var rolesArray = rolenames.map((rolename) => {
+      return `${rolename.id} ${rolename.title}`;
+    });
+  });
   inquirer
     .prompt([
       {
         name: "removeRol",
-        type: "rawlist",
+        type: "list",
         message: "Which role would you like to remove from Barstool's list?",
-        choices: [],
+        choices: rolesArray,
       },
     ])
     .then(function (answer) {
       console.log("Deleting role......\n");
+      var removeID = answer.removeRol.split(" ");
       connection.query(
         "DELETE FROM employee_role WHERE ?",
         {
-          title: answer.removeRol,
+          id: parseInt(removeID[0]),
         },
         function (err, res) {
           if (err) throw err;
-          console.log(res.affectedRows + " role deleted!\n");
+          console.log(`${removeID[1]} was removed from list.`);
           // Call viewallroles AFTER the DELETE completes
           console.table(viewAllRoles());
           runTracker();
