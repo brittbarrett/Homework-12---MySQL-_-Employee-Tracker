@@ -3,6 +3,7 @@ var mysql = require("mysql");
 var inquirer = require("inquirer");
 const cTable = require("console.table");
 
+// connection to database
 var connection = mysql.createConnection({
   host: "localhost",
   port: 3306,
@@ -14,10 +15,10 @@ var connection = mysql.createConnection({
 connection.connect(function (err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId + "\n");
-
   runTracker();
 });
 
+// function to start the app
 function runTracker() {
   inquirer
     .prompt({
@@ -32,8 +33,10 @@ function runTracker() {
         "Add Employee",
         "Add Role",
         "Remove Employee",
-        "Update Employee Information",
-        "Update Employee Role",
+        "Remove Department",
+        "Remove Role",
+        // "Update Employee Information",
+        // "Update Employee Role",
       ],
     })
     .then(function (answer) {
@@ -66,22 +69,39 @@ function runTracker() {
           removeEmployee();
           break;
 
-        case "Update Employee Information":
-          updateEmpInfo();
+        case "Remove Department":
+          removeDept();
           break;
 
-        case "Update Employee Role":
-          updateEmpRole();
+        case "Remove Role":
+          removeRole();
           break;
+
+        // case "Update Employee Information":
+        //   updateEmpInfo();
+        //   break;
+
+        // case "Update Employee Role":
+        //   updateEmpRole();
+        //   break;
       }
     });
 }
 
+// empty array to store the employee table by name
+// emplTablebyname = []
+
+// VIEW ALL EMPLOYEES
 function viewAllEmp() {
   console.log("Retrieving all employees...\n");
-  var query = "SELECT * FROM employee";
-  //query += "FROM employee INNER JOIN   ";
+
+  //make a connection to db to get all department name with innerjoin
+  //then add on to res
+  var query =
+    "SELECT employee.id, full_name, nick_name, role_id, manager_id, title FROM employee LEFT JOIN employee_role ON employee.role_id = employee_role.id";
   connection.query(query, function (err, res) {
+    // use a filter to fill up employee table by name and include id
+
     if (err) throw err;
     // Log all results of the SELECT statement
     console.table(res);
@@ -89,6 +109,7 @@ function viewAllEmp() {
   });
 }
 
+// VIEW ALL ROLES
 function viewAllRoles() {
   console.log("Retrieving all roles ...\n");
   connection.query("SELECT title FROM employee_role", function (err, res) {
@@ -99,6 +120,7 @@ function viewAllRoles() {
   });
 }
 
+// VIEW ALL DEPARTMENTS
 function viewAllDepts() {
   console.log("Retrieving all departments ...\n");
   connection.query("SELECT dept_name FROM employee_department", function (
@@ -112,6 +134,7 @@ function viewAllDepts() {
   });
 }
 
+// ADD DEPARTMENT
 function addDepartment() {
   //ask user what dept to add
   inquirer
@@ -124,6 +147,7 @@ function addDepartment() {
     ])
     .then(function (answer) {
       console.log("Adding department to network...\n");
+      // insert the new department from the user into the employee_department table in the db
       var query = connection.query(
         "INSERT INTO employee_department SET ?",
         {
@@ -141,6 +165,7 @@ function addDepartment() {
     });
 }
 
+// ADD EMPLOYEE
 function addEmployee() {
   // ask user who they would like to add
   inquirer
@@ -163,10 +188,10 @@ function addEmployee() {
 
       //   ]
       // }
-      // { how to add department into table as well...
-      //   name: "newEmpDept",
+      // { how to add role into table as well...
+      //   name: "newEmpRole",
       //   type: "rawlist",
-      //   message: "Which department is your new employee in at Barstool?",
+      //   message: "What title would you like to give our new employee at Barstool?",
       //   choices: [
 
       //   ]
@@ -179,14 +204,12 @@ function addEmployee() {
         {
           full_name: answer.fullName,
           nick_name: answer.nickName,
-          // role_id
-          // manager_id
+          // role_id: answer.newEmpRole,
+          // manager_id: answer.managerID
         },
         function (err, res) {
           if (err) throw err;
           console.log(res.affectedRows + " employee added!\n");
-          // // Call updateemployee AFTER the INSERT completes
-          // updateEmpInfo();
         }
       );
 
@@ -196,6 +219,7 @@ function addEmployee() {
     });
 }
 
+// ADD ROLE
 function addRole() {
   inquirer
     .prompt([
@@ -216,14 +240,11 @@ function addRole() {
         "INSERT INTO employee_role SET ?",
         {
           title: answer.newtitle,
-          salary: "",
-          // employee_dept_id: "",
+          salary: answer.newSalary,
         },
         function (err, res) {
           if (err) throw err;
           console.log(res.affectedRows + " role added!\n");
-          // Call updateemployeerole AFTER the INSERT completes
-          updateEmpRole();
         }
       );
 
@@ -233,14 +254,16 @@ function addRole() {
     });
 }
 
+// REMOVE EMPLOYEE
 function removeEmployee() {
   inquirer
     .prompt([
       {
         name: "removeEmp",
-        type: "input",
+        type: "rawlist",
         message:
           "Who would you like to cut from the Barstool team? Please give the full name.",
+        choices: [],
       },
     ])
     .then(function (answer) {
@@ -253,7 +276,7 @@ function removeEmployee() {
         function (err, res) {
           if (err) throw err;
           console.log(res.affectedRows + " employee deleted!\n");
-          // Call viewallfullname AFTER the DELETE completes
+          // Call view all employees AFTER the DELETE completes
           console.table(viewAllEmp());
           runTracker();
         }
@@ -261,82 +284,143 @@ function removeEmployee() {
     });
 }
 
-function updateEmpInfo() {
-  var query = connection.query("SELECT * FROM employee", function (
-    err,
-    results
-  ) {
-    if (err) throw err;
-    inquirer
-      .prompt([
+// REMOVE DEPARTMENT
+function removeDept() {
+  inquirer
+    .prompt([
+      {
+        name: "removeDep",
+        type: "rawlist",
+        message:
+          "Which department would you like to remove from Barstool's list?",
+        choices: [],
+      },
+    ])
+    .then(function (answer) {
+      console.log("Deleting department......\n");
+      connection.query(
+        "DELETE FROM employee_department WHERE ?",
         {
-          name: "updateEmp",
-          type: "rawlist",
-          choices: function () {
-            var empArray = [];
-            for (var i = 0; i < results.length; i++) {
-              empArray.push(results[i].full_name);
-            }
-            return empArray;
-          },
-          message:
-            "Who would you like to update information on from the Barstool team?",
+          dept_name: answer.removeDep,
         },
-        {
-          name: "toChange",
-          type: "rawlist",
-          choices: [],
-        },
-      ])
-      .then(function (answer) {
-        var chosenEmp;
-        for (var i = 0; i < results.length; i++) {
-          if (results[i].full_name === answer.updateEmp) {
-            chosenEmp = results[i];
-          }
+        function (err, res) {
+          if (err) throw err;
+          console.log(res.affectedRows + " department deleted!\n");
+          // Call viewalldepartments AFTER the DELETE completes
+          console.table(viewAllDepts());
+          runTracker();
         }
-      }).then;
-  });
-
-  console.log("Updating the employee you selected...\n");
-  var query = connection.query(
-    "UPDATE employee SET ? WHERE ?",
-    [
-      {
-        full_name: "",
-      },
-      {
-        nick_name: "",
-      },
-    ],
-    function (err, res) {
-      if (err) throw err;
-      console.log(res.affectedRows + " employee updated!\n");
-    }
-  );
-
-  // logs the actual query being run
-  console.log(query.sql);
+      );
+    });
 }
 
-function updateEmpRole() {
-  console.log("Updating employee role...\n");
-  var query = connection.query(
-    "UPDATE employee_role SET ? WHERE ?",
-    [
+// REMOVE ROLE
+function removeRole() {
+  inquirer
+    .prompt([
       {
-        title: "",
+        name: "removeRol",
+        type: "rawlist",
+        message: "Which role would you like to remove from Barstool's list?",
+        choices: [],
       },
-      {
-        salary: "",
-      },
-    ],
-    function (err, res) {
-      if (err) throw err;
-      console.log(res.affectedRows + " employee_role updated!\n");
-    }
-  );
-
-  // logs the actual query being run
-  console.log(query.sql);
+    ])
+    .then(function (answer) {
+      console.log("Deleting role......\n");
+      connection.query(
+        "DELETE FROM employee_role WHERE ?",
+        {
+          title: answer.removeRol,
+        },
+        function (err, res) {
+          if (err) throw err;
+          console.log(res.affectedRows + " role deleted!\n");
+          // Call viewallroles AFTER the DELETE completes
+          console.table(viewAllRoles());
+          runTracker();
+        }
+      );
+    });
 }
+
+// UPDATE EMPLOYEE
+// function updateEmpInfo() {
+//   var query = connection.query("SELECT * FROM employee", function (
+//     err,
+//     results
+//   ) {
+//     if (err) throw err;
+//     inquirer
+//       .prompt([
+//         {
+//           name: "updateEmp",
+//           type: "rawlist",
+//           choices: function () {
+//             var empArray = [];
+//             for (var i = 0; i < results.length; i++) {
+//               empArray.push(results[i].full_name);
+//             }
+//             return empArray;
+//           },
+//           message:
+//             "Who would you like to update information on from the Barstool team?",
+//         },
+//         {
+//           name: "toChange",
+//           type: "rawlist",
+//           choices: [],
+//         },
+//       ])
+//       .then(function (answer) {
+//         var chosenEmp;
+//         for (var i = 0; i < results.length; i++) {
+//           if (results[i].full_name === answer.updateEmp) {
+//             chosenEmp = results[i];
+//           }
+//         }
+//       }).then;
+//   });
+
+//   console.log("Updating the employee you selected...\n");
+//   var query = connection.query(
+//     "UPDATE employee SET ? WHERE ?",
+//     [
+//       {
+//         full_name: "",
+//       },
+//       {
+//         nick_name: "",
+//       },
+//     ],
+//     function (err, res) {
+//       if (err) throw err;
+//       console.log(res.affectedRows + " employee updated!\n");
+//     }
+//   );
+
+//   // logs the actual query being run
+//   console.log(query.sql);
+// }
+
+// UPDATE EMPLOYEE ROLE
+// function updateEmpRole() {
+//   console.log("Updating employee role...\n");
+//   var query = connection.query(
+//     "UPDATE employee_role SET ? WHERE ?",
+//     [
+//       {
+//         title: "",
+//       },
+//       {
+//         salary: "",
+//       },
+//     ],
+//     function (err, res) {
+//       if (err) throw err;
+//       console.log(res.affectedRows + " employee_role updated!\n");
+//     }
+//   );
+
+//   // logs the actual query being run
+//   console.log(query.sql);
+// }
