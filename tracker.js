@@ -30,8 +30,8 @@ function runTracker() {
         "View all Employees",
         "View all Roles",
         "View all Departments",
-        "Add Department",
         "Add Employee",
+        "Add Department",
         "Add Role",
         "Remove Employee",
         "Remove Department",
@@ -131,160 +131,172 @@ function viewAllDepts() {
   });
 }
 
-// ADD DEPARTMENT
-function addDepartment() {
-  //ask user what dept to add
-  inquirer
-    .prompt([
-      {
-        name: "newDept",
-        type: "input",
-        message: "What department would you like to add to Barstool?",
-      },
-    ])
-    .then(function (answer) {
-      console.log("Adding department to network...\n");
-      // insert the new department from the user into the employee_department table in the db
-      var query = connection.query(
-        "INSERT INTO employee_department SET ?",
-        {
-          dept_name: answer.newDept,
-        },
-        function (err, res) {
-          if (err) throw err;
-
-          console.log(res.affectedRows + " department added!\n");
-          // logs the actual query being run
-          console.table(viewAllDepts());
-          runTracker();
-        }
-      );
-    });
-}
-
 // ADD EMPLOYEE
 function addEmployee() {
-  // ask user who they would like to add
-  inquirer
-    .prompt([
-      {
-        name: "fullName",
-        type: "input",
-        message: "What is the full name of your new employee for Barstool?",
-      },
-      {
-        name: "nickName",
-        type: "input",
-        message: "What is the nickname of your new employee for Barstool?",
-      },
-      // {
-      //   name: "managerID",
-      //   type: "rawlist",
-      //   message: "Who is this new employee's manager?,
-      //   choices: [
-
-      //   ]
-      // }
-      // { how to add role into table as well...
-      //   name: "newEmpRole",
-      //   type: "rawlist",
-      //   message: "What title would you like to give our new employee at Barstool?",
-      //   choices: [
-
-      //   ]
-      // }
-    ])
-    .then(function (answer) {
-      console.log("Adding a member to our team...\n");
-      var query = connection.query(
-        "INSERT INTO employee SET ?",
-        {
-          full_name: answer.fullName,
-          nick_name: answer.nickName,
-          // role_id: answer.newEmpRole,
-          // manager_id: answer.managerID
-        },
-        function (err, res) {
-          if (err) throw err;
-          console.log(res.affectedRows + " employee added!\n");
-        }
-      );
-
-      // logs the actual query being run
-      console.table(viewAllEmp());
-      runTracker();
+  connection.query("SELECT id, title FROM employee_role", (err, answer) => {
+    var roleArray = answer.map((rolename) => {
+      return `${rolename.id} ${rolename.title}`;
     });
+
+    // ask user who they would like to add
+    inquirer
+      .prompt([
+        {
+          name: "fullName",
+          type: "input",
+          message: "What is the full name of your new employee for Barstool?",
+          // validate: confirmEmpty,
+        },
+        {
+          name: "nickName",
+          type: "input",
+          message: "What is the nickname of your new employee for Barstool?",
+          // validate: confirmEmpty,
+        },
+        {
+          name: "role",
+          type: "list",
+          choices: roleArray,
+          message: "What is the new employee's role?",
+        },
+      ])
+      .then((answer) => {
+        console.log("Adding a member to our team...\n");
+        var role = answer.role.split(" ");
+        connection.query(
+          "INSERT INTO employee SET ?",
+          {
+            full_name: answer.fullName,
+            nick_name: answer.nickName,
+            role_id: parseInt(answer.role[0]),
+          },
+          function (err, answer) {
+            if (err) throw err;
+            console.log(
+              `${answer.fullName} aka ${answer.nickName} was added to the Barstool team.`
+            );
+          }
+        );
+
+        // logs the actual query being run
+        console.table(viewAllEmp());
+        runTracker();
+      });
+  });
+}
+
+// ADD DEPARTMENT
+function addDepartment() {
+  connection.query("SELECT id, title ROLE;", (err) => {
+    //ask user what dept to add
+    inquirer
+      .prompt([
+        {
+          name: "newDept",
+          type: "input",
+          message: "What department would you like to add to Barstool?",
+          // validate: confirmEmpty,
+        },
+      ])
+      .then((answer) => {
+        console.log("Adding department to network...\n");
+        // insert the new department from the user into the employee_department table in the db
+        connection.query(
+          "INSERT INTO employee_department SET ?",
+          {
+            dept_name: answer.newDept,
+          },
+          function (err, res) {
+            if (err) throw err;
+
+            console.log(
+              `${answer.newDept} was added to the department list at Barstool.`
+            );
+            // logs the actual query being run
+            console.table(viewAllDepts());
+            runTracker();
+          }
+        );
+      });
+  });
 }
 
 // ADD ROLE
 function addRole() {
-  inquirer
-    .prompt([
-      {
-        name: "newtitle",
-        type: "input",
-        message: "What title would you like to add at Barstool?",
-      },
-      {
-        name: "newSalary",
-        type: "input",
-        message: "What is the salary of this new role?",
-      },
-    ])
-    .then(function (answer) {
-      console.log("Adding new role to the list...\n");
-      var query = connection.query(
-        "INSERT INTO employee_role SET ?",
+  connection.query("SELECT id, title FEROM employee_role;", (err, answer) => {
+    inquirer
+      .prompt([
         {
-          title: answer.newtitle,
-          salary: answer.newSalary,
+          name: "newtitle",
+          type: "input",
+          message: "What title would you like to add at Barstool?",
+          // validate: confirmEmpty,
         },
-        function (err, res) {
-          if (err) throw err;
-          console.log(res.affectedRows + " role added!\n");
-        }
-      );
+        {
+          name: "newSalary",
+          type: "input",
+          message: "What is the salary of this new role?",
+          // validate: confirmNumber,
+        },
+      ])
+      .then((answer) => {
+        console.log("Adding new role to the list...\n");
 
-      // logs the actual query being run
-      console.table(viewAllRoles());
-      runTracker();
-    });
+        connection.query(
+          "INSERT INTO employee_role SET ?",
+          {
+            title: answer.newtitle,
+            salary: answer.newSalary,
+          },
+          function (err, answer) {
+            if (err) throw err;
+            console.log(
+              `${answer.newtitle} was added to the role list at Barstool.`
+            );
+          }
+        );
+
+        // logs the actual query being run
+        console.table(viewAllRoles());
+        runTracker();
+      });
+  });
 }
 
 // REMOVE EMPLOYEE
 function removeEmployee() {
   connection.query("SELECT * FROM employee", (err, empnames) => {
-    var employeesArray = empnames.map((name) => {
+    let employeesArray = empnames.map((name) => {
       return `${name.id} ${name.full_name} ${name.nick_name}`;
     });
-  });
-  inquirer
-    .prompt([
-      {
-        name: "removeEmp",
-        type: "list",
-        message:
-          "Who would you like to cut from the Barstool team? Please give the full name.",
-        choices: employeesArray,
-      },
-    ])
-    .then(function (answer) {
-      var removeID = answer.removeEmp.split(" ");
-      console.log("Trimming the fat...\n");
-      connection.query(
-        "DELETE FROM employee WHERE ?",
+    inquirer
+      .prompt([
         {
-          id: parseInt(removeID[0]),
+          name: "removeEmp",
+          type: "list",
+          message:
+            "Who would you like to cut from the Barstool team? Please give the full name.",
+          choices: employeesArray,
         },
-        function (err, res) {
-          if (err) throw err;
-          console.log(`${removeID[1]} ${removeID[2]} was removed from list.`);
-          // Call view all employees AFTER the DELETE completes
-          console.table(viewAllEmp());
-          runTracker();
-        }
-      );
-    });
+      ])
+      .then(function (answer) {
+        var removeID = answer.removeEmp.split(" ");
+        console.log("Trimming the fat...\n");
+        connection.query(
+          "DELETE FROM employee WHERE ?",
+          {
+            id: parseInt(removeID[0]),
+          },
+          function (err, res) {
+            if (err) throw err;
+            console.log(`${removeID[1]} ${removeID[2]} was removed from list.`);
+            // Call view all employees AFTER the DELETE completes
+            console.table(viewAllEmp());
+            runTracker();
+          }
+        );
+      });
+  });
 }
 
 // REMOVE DEPARTMENT
@@ -293,34 +305,34 @@ function removeDept() {
     var departmentsArray = deptnames.map((deptname) => {
       return `${deptname.id} ${deptname.dept_name}`;
     });
-  });
-  inquirer
-    .prompt([
-      {
-        name: "removeDep",
-        type: "list",
-        message:
-          "Which department would you like to remove from Barstool's list?",
-        choices: departmentsArray,
-      },
-    ])
-    .then(function (answer) {
-      console.log("Deleting department......\n");
-      var removeID = answer.removeDep.split(" ");
-      connection.query(
-        "DELETE FROM employee_department WHERE ?",
+    inquirer
+      .prompt([
         {
-          id: parseInt(removeID[0]),
+          name: "removeDep",
+          type: "list",
+          message:
+            "Which department would you like to remove from Barstool's list?",
+          choices: departmentsArray,
         },
-        function (err, res) {
-          if (err) throw err;
-          console.log(`${removeID[1]} was deleted from list.`);
-          // Call viewalldepartments AFTER the DELETE completes
-          console.table(viewAllDepts());
-          runTracker();
-        }
-      );
-    });
+      ])
+      .then(function (answer) {
+        console.log("Deleting department......\n");
+        var removeID = answer.removeDep.split(" ");
+        connection.query(
+          "DELETE FROM employee_department WHERE ?",
+          {
+            id: parseInt(removeID[0]),
+          },
+          function (err, res) {
+            if (err) throw err;
+            console.log(`${removeID[1]} was deleted from list.`);
+            // Call viewalldepartments AFTER the DELETE completes
+            console.table(viewAllDepts());
+            runTracker();
+          }
+        );
+      });
+  });
 }
 
 // REMOVE ROLE
@@ -329,33 +341,33 @@ function removeRole() {
     var rolesArray = rolenames.map((rolename) => {
       return `${rolename.id} ${rolename.title}`;
     });
-  });
-  inquirer
-    .prompt([
-      {
-        name: "removeRol",
-        type: "list",
-        message: "Which role would you like to remove from Barstool's list?",
-        choices: rolesArray,
-      },
-    ])
-    .then(function (answer) {
-      console.log("Deleting role......\n");
-      var removeID = answer.removeRol.split(" ");
-      connection.query(
-        "DELETE FROM employee_role WHERE ?",
+    inquirer
+      .prompt([
         {
-          id: parseInt(removeID[0]),
+          name: "removeRol",
+          type: "list",
+          message: "Which role would you like to remove from Barstool's list?",
+          choices: rolesArray,
         },
-        function (err, res) {
-          if (err) throw err;
-          console.log(`${removeID[1]} was removed from list.`);
-          // Call viewallroles AFTER the DELETE completes
-          console.table(viewAllRoles());
-          runTracker();
-        }
-      );
-    });
+      ])
+      .then(function (answer) {
+        console.log("Deleting role......\n");
+        var removeID = answer.removeRol.split(" ");
+        connection.query(
+          "DELETE FROM employee_role WHERE ?",
+          {
+            id: parseInt(removeID[0]),
+          },
+          function (err, res) {
+            if (err) throw err;
+            console.log(`${removeID[1]} was removed from list.`);
+            // Call viewallroles AFTER the DELETE completes
+            console.table(viewAllRoles());
+            runTracker();
+          }
+        );
+      });
+  });
 }
 
 // UPDATE EMPLOYEE
